@@ -1,10 +1,11 @@
-//Program to construct a DFA which accepts the language L = {aN | N ≥ 1
+// Program to construct a DFA which accepts the language L = { a^N | N ≥ 1 }
+
 #include <iostream>
 #include <string>
 using namespace std;
 
 void isAcceptedDFA(string s) {
-    // Check if string is empty
+    // Check if string is empty (N must be >= 1)
     if (s.empty()) {
         cout << "Not Accepted";
         return;
@@ -22,7 +23,11 @@ void isAcceptedDFA(string s) {
 }
 
 int main() {
-    string S = "aaaaa";
-    isAcceptedDFA(S);
+    string s;
+    cout << "Enter the string: ";
+    cin >> s;   // user inputs the string
+    
+    isAcceptedDFA(s);
+    
     return 0;
 }

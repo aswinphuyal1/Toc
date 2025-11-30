@@ -1,6 +1,7 @@
-//2. Program to construct a DFA which accept the language L = {anbm | n mod 2=0,m≥1
+// Program to construct a DFA which accepts the language L = { a^n b^m | n mod 2 = 0, m >= 1 }
+
 #include <iostream>
-#include <cstring>
+#include <string>
 using namespace std;
 
 // DFA state
@@ -22,8 +23,8 @@ void state1(char c) {
 
 // Q2
 void state2(char c) {
-    if (c == 'b') dfa = 3;
-    else if (c == 'a') dfa = 1;
+    if (c == 'a') dfa = 1;
+    else if (c == 'b') dfa = 3;
     else dfa = -1;
 }
 
@@ -39,16 +40,14 @@ void state4(char c) {
     dfa = -1;
 }
 
-bool isAccepted(char str[]) {
-    int len = strlen(str);
-
-    for (int i = 0; i < len; i++) {
-        if (dfa == 0) start(str[i]);
-        else if (dfa == 1) state1(str[i]);
-        else if (dfa == 2) state2(str[i]);
-        else if (dfa == 3) state3(str[i]);
-        else if (dfa == 4) state4(str[i]);
-        else return false;
+bool isAccepted(string str) {
+    for (char c : str) {
+        if (dfa == 0) start(c);
+        else if (dfa == 1) state1(c);
+        else if (dfa == 2) state2(c);
+        else if (dfa == 3) state3(c);
+        else if (dfa == 4) state4(c);
+        else return false; // invalid symbol
     }
 
     // Accepting state: Q3
@@ -56,7 +55,9 @@ bool isAccepted(char str[]) {
 }
 
 int main() {
-    char str[] = "aaaaaabbbb";
+    string str;
+    cout << "Enter the string: ";
+    cin >> str;
 
     if (isAccepted(str))
         cout << "ACCEPTED\n";
