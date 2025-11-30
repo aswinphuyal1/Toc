@@ -1,148 +1,143 @@
 ///8. A simple and basic program in C to convert NFA to DFA (does not handle null moves)
-#include<stdio.h>
-#include<string.h>
-#include<math.h>
-int ninputs;
+#include <iostream>
+#include <cmath>
+#include <cstring>
+using namespace std;
+
 int dfa[100][2][100] = {0};
-int state[10000] = {0};
-char ch[10], str[1000];
-int go[10000][2] = {0};
-int arr[10000] = {0};
-int main()
-{
-int st, fin, in;
-int f[10];
-int i,j=3,s=0,final=0,flag=0,curr1,curr2,k,l;
-int c;
-printf("\nFollow the one based indexing\n");
-printf("\nEnter the number of states::");
-scanf("%d",&st);
-printf("\nGive state numbers from 0 to %d",st-1);
-for(i=0;i<st;i++)
-state[(int)(pow(2,i))] = 1;
-printf("\nEnter number of final states\t");
-scanf("%d",&fin);
-printf("\nEnter final states::");
-for(i=0;i<fin;i++)
-{
-scanf("%d",&f[i]);
-}
-int p,q,r,rel;
-printf("\nEnter the number of rules according to NFA::");
-scanf("%d",&rel);
-printf("\n\nDefine transition rule as \"initial state input symbol final
-state\"\n");
-for(i=0; i<rel; i++)
-{
-scanf("%d%d%d",&p,&q,&r);
-if (q==0)
-dfa[p][0][r] = 1;
-else
-dfa[p][1][r] = 1;
-}
-printf("\nEnter initial state::");
-scanf("%d",&in);
-in = pow(2,in);
-i=0;
-printf("\nSolving according to DFA");
-int x=0;
-for(i=0;i<st;i++)
-{
-for(j=0;j<2;j++)
-{
-int stf=0;
-for(k=0;k<st;k++)
-{
-if(dfa[i][j][k]==1)
-stf = stf + pow(2,k);
-}
-go[(int)(pow(2,i))][j] = stf;
-printf("%d-%d-->%d\n",(int)(pow(2,i)),j,stf);
-if(state[stf]==0)
-arr[x++] = stf;
-state[stf] = 1;
-}
-}
-//for new states
-for(i=0;i<x;i++)
-{
-printf("for %d ---- ",arr[x]);
-for(j=0;j<2;j++)
-{
-int new=0;
-for(k=0;k<st;k++)
-{
-if(arr[i] & (1<<k))
-{
-int h = pow(2,k);
-if(new==0)
-new =
-go[h][j];
-new = new |
-(go[h][j]);
-}
-}
-if(state[new]==0)
-{
-arr[x++] = new;
-state[new] = 1;
-}
-}
-}
-printf("\nThe total number of distinct states are::\n");
-printf("STATE 0 1\n");
-for(i=0;i<10000;i++)
-{
-if(state[i]==1)
-{
-//printf("%d**",i);
-int y=0;
-if(i==0)
-printf("q0 ");
-else
-for(j=0;j<st;j++)
-{
-int x = 1<<j;
-if(x&i)
-{
-printf("q%d ",j);
-y = y+pow(2,j);
-//printf("y=%d ",y);
-}
-}
-//printf("%d",y);
-printf(" %d %d",go[y][0],go[y][1]);
-printf("\n");
-}
-}
-j=3;
-while(j--)
-{
-printf("\nEnter string");
-scanf("%s",str);
-l = strlen(str);
-curr1 = in;
-flag = 0;
-printf("\nString takes the following path-->\n");
-printf("%d-",curr1);
-for(i=0;i<l;i++)
-{
-curr1 = go[curr1][str[i]-'0'];
-printf("%d-",curr1);
-}
-printf("\nFinal state - %d\n",curr1);
-for(i=0;i<fin;i++)
-{
-if(curr1 & (1<<f[i]))
-{
-flag = 1;
-break;
-}
-}
-if(flag)
-printf("\nString Accepted");
-else
-printf("\nString Rejected");
-}
-return 0;
+int stateUsed[10000] = {0};
+int goToState[10000][2] = {0};
+int newStates[10000] = {0};
+
+int main() {
+    int st, fin, inState;
+    int finalStates[10];
+    int rel;
+    
+    cout << "\nFollow one-based indexing";
+    cout << "\nEnter number of NFA states: ";
+    cin >> st;
+
+    cout << "Give state numbers from 0 to " << st - 1 << "\n";
+
+    // Mark initial single states as used
+    for (int i = 0; i < st; i++)
+        stateUsed[(int)pow(2, i)] = 1;
+
+    cout << "\nEnter number of final states: ";
+    cin >> fin;
+
+    cout << "Enter final states: ";
+    for (int i = 0; i < fin; i++)
+        cin >> finalStates[i];
+
+    cout << "\nEnter number of transition rules in NFA: ";
+    cin >> rel;
+
+    cout << "\nDefine transitions as  \"initial input final\"\n";
+    cout << "(Input symbol: 0 or 1)\n";
+
+    int p, q, r;
+    for (int i = 0; i < rel; i++) {
+        cin >> p >> q >> r;
+        dfa[p][q][r] = 1;
+    }
+
+    cout << "\nEnter initial state: ";
+    cin >> inState;
+    inState = pow(2, inState);
+
+    cout << "\nSolving DFA transitions...\n";
+
+    int x = 0;
+
+    // Build initial transitions
+    for (int i = 0; i < st; i++) {
+        for (int j = 0; j < 2; j++) {
+            int newState = 0;
+
+            for (int k = 0; k < st; k++) {
+                if (dfa[i][j][k] == 1)
+                    newState += pow(2, k);
+            }
+
+            goToState[(int)pow(2, i)][j] = newState;
+
+            if (stateUsed[newState] == 0) {
+                newStates[x++] = newState;
+                stateUsed[newState] = 1;
+            }
+
+            cout << (int)pow(2, i) << " --" << j << "--> " << newState << "\n";
+        }
+    }
+
+    // Handle newly created states
+    for (int i = 0; i < x; i++) {
+        for (int j = 0; j < 2; j++) {
+            int merged = 0;
+            for (int k = 0; k < st; k++) {
+                if (newStates[i] & (1 << k)) {
+                    int h = pow(2, k);
+                    merged |= goToState[h][j];
+                }
+            }
+
+            if (stateUsed[merged] == 0) {
+                newStates[x++] = merged;
+                stateUsed[merged] = 1;
+            }
+            goToState[newStates[i]][j] = merged;
+        }
+    }
+
+    // Display final DFA transition table
+    cout << "\n\nDFA States and Transitions:\n";
+    cout << "STATE\t0\t1\n";
+
+    for (int i = 0; i < 10000; i++) {
+        if (stateUsed[i] == 1) {
+            if (i == 0)
+                cout << "q0\t";
+            else {
+                for (int j = 0; j < st; j++)
+                    if (i & (1 << j))
+                        cout << "q" << j << " ";
+                cout << "\t";
+            }
+            cout << goToState[i][0] << "\t" << goToState[i][1] << "\n";
+        }
+    }
+
+    // Test strings
+    for (int test = 0; test < 3; test++) {
+        char str[1000];
+        cout << "\nEnter string of 0s and 1s: ";
+        cin >> str;
+
+        int length = strlen(str);
+        int curr = inState;
+
+        cout << "\nPath: " << curr << " -> ";
+
+        for (int i = 0; i < length; i++) {
+            curr = goToState[curr][str[i] - '0'];
+            cout << curr << " -> ";
+        }
+
+        bool accepted = false;
+        for (int i = 0; i < fin; i++) {
+            if (curr & (1 << finalStates[i])) {
+                accepted = true;
+                break;
+            }
+        }
+
+        if (accepted)
+            cout << "\nResult: ACCEPTED\n";
+        else
+            cout << "\nResult: REJECTED\n";
+    }
+
+    return 0;
 }
