@@ -1,140 +1,101 @@
-// C program to simulate Nondeterministic Finite Automata (NFA)
+ // C program to simulate Nondeterministic Finite Automata (NFA)
+
 #include <iostream>
+#include <vector>
+#include <set>
+#include <string>
 using namespace std;
 
-int row = 0;
-
-// Node for adjacency list
-struct Node {
-    int data;
-    char edgetype;
-    Node* next;
-    Node(int d, char e) : data(d), edgetype(e), next(nullptr) {}
+struct Transition {
+    int to;
+    char symbol;   // input char or 'e' for epsilon
 };
 
-// Add edge
-Node* push(Node* first, char edgetype, int data) {
-    Node* newNode = new Node(data, edgetype);
-    newNode->next = first;
-    return newNode;
-}
+// Compute epsilon-closure of a state
+void epsilonClosure(int state, vector<vector<Transition>>& nfa, set<int>& closure) {
+    if (closure.count(state)) return;
+    closure.insert(state);
 
-// String length
-int strLength(char str[]) {
-    int len = 0;
-    while (str[len] != '\0') len++;
-    return len;
-}
-
-// Copy string
-void strCopy(char dest[], char src[]) {
-    int i = 0;
-    while (src[i] != '\0') {
-        dest[i] = src[i];
-        i++;
+    for (auto& t : nfa[state]) {
+        if (t.symbol == 'e') { // epsilon transition
+            epsilonClosure(t.to, nfa, closure);
+        }
     }
-    dest[i] = '\0';
 }
 
-// NFA recursive acceptance
-int nfa(Node* graph[], int current, char input[], int accept[], int start, int len) {
-    if (start == len)
-        return accept[current];
-
-    Node* temp = graph[current];
-    while (temp != nullptr) {
-        if (input[start] == temp->edgetype)
-            if (nfa(graph, temp->data, input, accept, start + 1, len))
-                return 1;
-        temp = temp->next;
+// Move function: states reachable using input symbol
+set<int> moveOnSymbol(const set<int>& states, char symbol, vector<vector<Transition>>& nfa) {
+    set<int> result;
+    for (int st : states) {
+        for (auto& t : nfa[st]) {
+            if (t.symbol == symbol) {
+                result.insert(t.to);
+            }
+        }
     }
-    return 0;
-}
-
-// 2^exp
-int power(int base, int exp) {
-    int result = 1;
-    for (int i = 0; i < exp; i++) result *= base;
     return result;
 }
 
-// Generate binary strings
-void generate(char arr[][20], int size, char prefix[], int level) {
-    if (level == size) {
-        prefix[level] = '\0';
-        strCopy(arr[row++], prefix);
-        return;
-    }
-
-    prefix[level] = '0';
-    generate(arr, size, prefix, level + 1);
-
-    prefix[level] = '1';
-    generate(arr, size, prefix, level + 1);
-}
-
 int main() {
-    int n;
-    cout << "Enter number of NFA states: ";
-    cin >> n;  // number of states
+    int numStates, numTransitions, startState, numFinalStates;
+    cout << "Enter number of states: ";
+    cin >> numStates;
 
-    Node* graph[100];
-    int accept[100];
+    vector<vector<Transition>> nfa(numStates);
 
-    for (int i = 0; i < n; i++) {
-        graph[i] = nullptr;
-        accept[i] = 0;
+    cout << "Enter number of transitions: ";
+    cin >> numTransitions;
+
+    cout << "Enter transitions (from to symbol) — use 'e' for epsilon:\n";
+    for (int i = 0; i < numTransitions; i++) {
+        int from, to;
+        char symbol;
+        cin >> from >> to >> symbol;
+        nfa[from].push_back({to, symbol});
     }
 
-    cout << "For each state, enter: state_index is_accept(0/1) number_of_transitions\n";
-    cout << "Then for each transition: input_char next_state\n";
-    for (int i = 0; i < n; i++) {
-        int index, acc, number_nodes;
-        cin >> index >> acc >> number_nodes;
-
-        accept[index] = acc;
-
-        for (int j = 0; j < number_nodes; j++) {
-            char edge;
-            int nextState;
-            cin >> edge >> nextState;
-            graph[index] = push(graph[index], edge, nextState);
-        }
-    }
-
-    int start_state;
     cout << "Enter start state: ";
-    cin >> start_state;
+    cin >> startState;
 
-    int size = 1;
-    int count = 0;
+    cout << "Enter number of final states: ";
+    cin >> numFinalStates;
 
-    // Empty string check
-    if (accept[start_state] == 1) {
-        cout << "e\n";
-        count++;
+    set<int> finalStates;
+    cout << "Enter final states: ";
+    for (int i = 0; i < numFinalStates; i++) {
+        int fs;
+        cin >> fs;
+        finalStates.insert(fs);
     }
 
-    while (count < 10) {
-        int total = power(2, size);
-        char arr[1024][20];
-        char prefix[20];
+    string input;
+    cout << "Enter input string: ";
+    cin >> input;
 
-        row = 0;
-        generate(arr, size, prefix, 0);
+    // Step 1: ε-closure of start state
+    set<int> currentStates;
+    epsilonClosure(startState, nfa, currentStates);
 
-        for (int i = 0; i < total; i++) {
-            char* input = arr[i];
-            int len = strLength(input);
+    // Step 2: Process each input symbol
+    for (char c : input) {
+        set<int> nextStates = moveOnSymbol(currentStates, c, nfa);
 
-            if (nfa(graph, start_state, input, accept, 0, len)) {
-                cout << input << "\n";
-                count++;
-                if (count == 10) return 0;
-            }
+        // Apply epsilon-closure on all reachable states
+        set<int> closure;
+        for (int st : nextStates) {
+            epsilonClosure(st, nfa, closure);
         }
-        size++;
+        currentStates = closure;
     }
 
+    // Step 3: Check acceptance
+    for (int st : currentStates) {
+        if (finalStates.count(st)) {
+            cout << "\nString Accepted!\n";
+            return 0;
+        }
+    }
+
+    cout << "\nString Rejected.\n";
     return 0;
 }

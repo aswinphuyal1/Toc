@@ -1,7 +1,5 @@
 ///8. A simple and basic program in C to convert NFA to DFA (does not handle null moves)
 #include <iostream>
-#include <cmath>
-#include <cstring>
 using namespace std;
 
 int dfa[100][2][100] = {0};
@@ -13,8 +11,8 @@ int main() {
     int st, fin, inState;
     int finalStates[10];
     int rel;
-    
-    cout << "\nFollow one-based indexing";
+
+    cout << "\nFollow zero-based indexing";
     cout << "\nEnter number of NFA states: ";
     cin >> st;
 
@@ -22,7 +20,7 @@ int main() {
 
     // Mark initial single states as used
     for (int i = 0; i < st; i++)
-        stateUsed[(int)pow(2, i)] = 1;
+        stateUsed[(1 << i)] = 1;
 
     cout << "\nEnter number of final states: ";
     cin >> fin;
@@ -45,7 +43,7 @@ int main() {
 
     cout << "\nEnter initial state: ";
     cin >> inState;
-    inState = pow(2, inState);
+    inState = (1 << inState);
 
     cout << "\nSolving DFA transitions...\n";
 
@@ -55,20 +53,19 @@ int main() {
     for (int i = 0; i < st; i++) {
         for (int j = 0; j < 2; j++) {
             int newState = 0;
-
             for (int k = 0; k < st; k++) {
                 if (dfa[i][j][k] == 1)
-                    newState += pow(2, k);
+                    newState |= (1 << k);
             }
-
-            goToState[(int)pow(2, i)][j] = newState;
-
-            if (stateUsed[newState] == 0) {
+            goToState[(1 << i)][j] = newState;
+            if (newState != 0 && stateUsed[newState] == 0) {
                 newStates[x++] = newState;
                 stateUsed[newState] = 1;
             }
-
-            cout << (int)pow(2, i) << " --" << j << "--> " << newState << "\n";
+            cout << "{" << "q" << i << "} --" << j << "--> {";
+            for (int k = 0; k < st; k++)
+                if (newState & (1 << k)) cout << "q" << k << " ";
+            cout << "}\n";
         }
     }
 
@@ -78,12 +75,10 @@ int main() {
             int merged = 0;
             for (int k = 0; k < st; k++) {
                 if (newStates[i] & (1 << k)) {
-                    int h = pow(2, k);
-                    merged |= goToState[h][j];
+                    merged |= goToState[(1 << k)][j];
                 }
             }
-
-            if (stateUsed[merged] == 0) {
+            if (merged != 0 && stateUsed[merged] == 0) {
                 newStates[x++] = merged;
                 stateUsed[merged] = 1;
             }
@@ -94,35 +89,40 @@ int main() {
     // Display final DFA transition table
     cout << "\n\nDFA States and Transitions:\n";
     cout << "STATE\t0\t1\n";
-
     for (int i = 0; i < 10000; i++) {
         if (stateUsed[i] == 1) {
-            if (i == 0)
-                cout << "q0\t";
-            else {
-                for (int j = 0; j < st; j++)
-                    if (i & (1 << j))
-                        cout << "q" << j << " ";
-                cout << "\t";
-            }
-            cout << goToState[i][0] << "\t" << goToState[i][1] << "\n";
+            cout << "{";
+            for (int j = 0; j < st; j++)
+                if (i & (1 << j)) cout << "q" << j << " ";
+            cout << "}\t";
+            cout << "{";
+            for (int j = 0; j < st; j++)
+                if (goToState[i][0] & (1 << j)) cout << "q" << j << " ";
+            cout << "}\t{";
+            for (int j = 0; j < st; j++)
+                if (goToState[i][1] & (1 << j)) cout << "q" << j << " ";
+            cout << "}\n";
         }
     }
 
     // Test strings
     for (int test = 0; test < 3; test++) {
-        char str[1000];
+        string str;
         cout << "\nEnter string of 0s and 1s: ";
         cin >> str;
 
-        int length = strlen(str);
         int curr = inState;
+        cout << "\nPath: {";
+        for (int j = 0; j < st; j++)
+            if (curr & (1 << j)) cout << "q" << j << " ";
+        cout << "}";
 
-        cout << "\nPath: " << curr << " -> ";
-
-        for (int i = 0; i < length; i++) {
+        for (size_t i = 0; i < str.length(); i++) {
             curr = goToState[curr][str[i] - '0'];
-            cout << curr << " -> ";
+            cout << " -> {";
+            for (int j = 0; j < st; j++)
+                if (curr & (1 << j)) cout << "q" << j << " ";
+            cout << "}";
         }
 
         bool accepted = false;
