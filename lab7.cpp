@@ -1,6 +1,5 @@
 //7. Program to implement NFA from Regular Expression
 #include <iostream>
-#include <fstream>
 #include <string>
 using namespace std;
 
@@ -47,62 +46,37 @@ int main()
             for (int k = 0; k < 10; k++)
                 fa[i][j][k] = -1;
 
-    ifstream file("Nfa_ip.txt");
-    if (!file)
-    {
-        cout << "Error: Cannot open Nfa_ip.txt\n";
-        return 0;
+    // Interactive input instead of file
+    int numStates, numSymbols, numFinal, numTrans;
+    cout << "Enter number of NFA states: ";
+    cin >> numStates;
+    cout << "Enter number of input symbols (e.g., 2 for 'a' and 'b'): ";
+    cin >> numSymbols;
+
+    cout << "Enter start state: ";
+    cin >> states[0][0];
+
+    cout << "Enter number of final states: ";
+    cin >> numFinal;
+    cout << "Enter final states: ";
+    for (int i = 0; i < numFinal; i++)
+        cin >> states[1][i];
+
+    cout << "Enter number of transitions: ";
+    cin >> numTrans;
+    cout << "Enter transitions as: from_state input_symbol_index to_state\n";
+    cout << "Input symbol index: 0 for 'a', 1 for 'b', etc.\n";
+    for (int i = 0; i < numTrans; i++) {
+        int from, symbol, to;
+        cin >> from >> symbol >> to;
+        // Find next available slot for this transition
+        int slot = 0;
+        while (fa[from][symbol][slot] != -1) slot++;
+        fa[from][symbol][slot] = to;
     }
-
-    int flag = 0;
-    char c;
-
-    while (file >> in)
-    {
-        file.get(c);
-
-        if (flag)
-        {
-            states[sr][sc++] = in;
-            if (c == '\n')
-            {
-                sr++;
-                sc = 0;
-            }
-        }
-        else if (c == '#')
-        {
-            flag = 1;
-            fa[row][col][th] = in;
-            cout << "\nfa[" << row << "][" << col << "][" << th << "]=" << in;
-        }
-        else if (!flag)
-        {
-            fa[row][col][th] = in;
-            cout << "\nfa[" << row << "][" << col << "][" << th << "]=" << in;
-
-            if (c == ',')
-            {
-                th++;
-            }
-            else if (c == '\n')
-            {
-                col = 0;
-                row++;
-                th = 0;
-            }
-            else
-            {
-                col++;
-                th = 0;
-            }
-        }
-    }
-
-    file.close();
 
     string input;
-    cout << "\n\nEnter the string: ";
+    cout << "\nEnter the string (using 'a', 'b', ...): ";
     cin >> input;
 
     int start_state = states[0][0];

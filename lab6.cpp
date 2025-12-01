@@ -75,6 +75,7 @@ void generate(char arr[][20], int size, char prefix[], int level) {
 
 int main() {
     int n;
+    cout << "Enter number of NFA states: ";
     cin >> n;  // number of states
 
     Node* graph[100];
@@ -85,7 +86,8 @@ int main() {
         accept[i] = 0;
     }
 
-    // Input transitions
+    cout << "For each state, enter: state_index is_accept(0/1) number_of_transitions\n";
+    cout << "Then for each transition: input_char next_state\n";
     for (int i = 0; i < n; i++) {
         int index, acc, number_nodes;
         cin >> index >> acc >> number_nodes;
@@ -100,11 +102,15 @@ int main() {
         }
     }
 
+    int start_state;
+    cout << "Enter start state: ";
+    cin >> start_state;
+
     int size = 1;
     int count = 0;
 
     // Empty string check
-    if (accept[1] == 1) {
+    if (accept[start_state] == 1) {
         cout << "e\n";
         count++;
     }
@@ -121,7 +127,7 @@ int main() {
             char* input = arr[i];
             int len = strLength(input);
 
-            if (nfa(graph, 1, input, accept, 0, len)) {
+            if (nfa(graph, start_state, input, accept, 0, len)) {
                 cout << input << "\n";
                 count++;
                 if (count == 10) return 0;
