@@ -1,5 +1,7 @@
 // Program to construct a DFA which accepts the language L = { a^N | N ≥ 1 }
 
+
+
 #include <iostream>
 #include <string>
 using namespace std;
